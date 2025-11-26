@@ -5,6 +5,11 @@ import { Search, Check } from "lucide-react";
 import Tabs from "./Tabs";
 import FriendCard from "./FriendCard";
 
+import LinkedFriends from "./LinkedFriends";
+import FriendSuggestions from "./FriendSuggestions";
+import MyRequests from "./MyRequests";
+import AddFriends from "./AddFriends";
+
 const FriendManagement = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [friends, setFriends] = useState([]);
@@ -31,6 +36,7 @@ const FriendManagement = () => {
 
   const fetchFriends = async () => {
     try {
+      ``;
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/user/linked-friends`,
         { headers: { authorization: token } }
@@ -86,18 +92,6 @@ const FriendManagement = () => {
     fetchAllUsers();
   };
 
-  const sendRequest = async (friendId) => {
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/user/send-request`,
-        { requestFrom: currentUser._id, requestTo: friendId }
-      );
-      setMySentRequests((prev) => [...prev, friendId]);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   const cancelRequest = async (friendId) => {
     try {
       await axios.post(
@@ -134,106 +128,92 @@ const FriendManagement = () => {
   const myRequestsList = allUsers.filter((u) => mySentRequests.includes(u._id));
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white p-5">
-      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="min-h-screen w-full bg-[#070b16] text-white p-4 space-y-6">
+      {/* Tab Selector */}
+      <div className="flex gap-3 mb-4">
+        <button
+          onClick={() => setActiveTab("friends")}
+          className={`px-4 py-2 rounded-xl transition-all duration-300 ${
+            activeTab === "friends"
+              ? "bg-blue-600/30 border border-blue-400/40"
+              : "bg-[#0e162b]/40 border border-blue-500/20 hover:bg-blue-600/20"
+          }`}
+        >
+          My Friends
+        </button>
 
-      {/* Friends */}
-      {activeTab === "friends" &&
-        (friends.length === 0 ? (
-          <p>No friends</p>
-        ) : (
-          friends.map((f) => (
-            <FriendCard
-              key={f._id}
-              user={f}
-              actionButton={() => <Check className="text-green-500" />}
-            />
-          ))
-        ))}
+        <button
+          onClick={() => setActiveTab("suggestions")}
+          className={`px-4 py-2 rounded-xl transition-all duration-300 ${
+            activeTab === "suggestions"
+              ? "bg-blue-600/30 border border-blue-400/40"
+              : "bg-[#0e162b]/40 border border-blue-500/20 hover:bg-blue-600/20"
+          }`}
+        >
+          Suggestions
+        </button>
 
-      {/* Add Friends */}
-      {activeTab === "addFriends" && (
-        <>
-          <h2 className="text-2xl font-bold mb-4">Add Friends</h2>
-          <div className="flex items-center gap-3 bg-[#1f1f1f] rounded-full px-4 py-2 border border-gray-700 mb-4">
-            <Search />
-            <input
-              className="bg-transparent outline-none w-full"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search users..."
-            />
-          </div>
-          {addFriendsList
-            .filter((u) =>
-              u.username.toLowerCase().includes(query.toLowerCase())
-            )
-            .map((user) => (
-              <FriendCard
-                key={user._id}
-                user={user}
-                actionButton={() => (
-                  <button
-                    onClick={() => sendRequest(user._id)}
-                    className="bg-gray-700 px-4 py-1 rounded-full"
-                  >
-                    Add
-                  </button>
-                )}
-              />
-            ))}
-        </>
-      )}
+        <button
+          onClick={() => setActiveTab("addFriends")}
+          className={`px-4 py-2 rounded-xl transition-all duration-300 ${
+            activeTab === "addFriends"
+              ? "bg-blue-600/30 border border-blue-400/40"
+              : "bg-[#0e162b]/40 border border-blue-500/20 hover:bg-blue-600/20"
+          }`}
+        >
+          Add Friends
+        </button>
 
-      {/* My Requests */}
-      {activeTab === "requests" &&
-        (myRequestsList.length === 0 ? (
-          <p>No requests sent</p>
-        ) : (
-          myRequestsList.map((u) => (
-            <FriendCard
-              key={u._id}
-              user={u}
-              actionButton={() => (
-                <button
-                  onClick={() => cancelRequest(u._id)}
-                  className="bg-red-600 px-4 py-1 rounded-full"
-                >
-                  Cancel
-                </button>
-              )}
-            />
-          ))
-        ))}
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`px-4 py-2 rounded-xl transition-all duration-300 ${
+            activeTab === "requests"
+              ? "bg-blue-600/30 border border-blue-400/40"
+              : "bg-[#0e162b]/40 border border-blue-500/20 hover:bg-blue-600/20"
+          }`}
+        >
+          My Requests
+        </button>
+      </div>
 
-      {/* Suggestions */}
-      {activeTab === "suggestions" &&
-        (suggestions.length === 0 ? (
-          <p>No incoming requests</p>
-        ) : (
-          suggestions.map((u) => (
-            <FriendCard
-              key={u._id}
-              user={u}
-              actionButton={() => (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => acceptRequest(u._id)}
-                    className="bg-blue-600 px-3 py-1 rounded"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => cancelRequest(u._id)}
-                    className="bg-red-600 px-3 py-1 rounded"
-                  >
-                    Decline
-                  </button>
-                </div>
-              )}
-            />
-          ))
-        ))}
+      {/* Content Sections */}
+      <div className="space-y-6">
+        {activeTab === "friends" && (
+          <section className="bg-[#0e162b]/50 backdrop-blur-md border border-blue-500/20 rounded-2xl p-4">
+            <h2 className="text-xl font-semibold text-blue-400 mb-3">
+              My Friends
+            </h2>
+            <LinkedFriends token={token} currentUser={currentUser} />
+          </section>
+        )}
+
+        {activeTab === "suggestions" && (
+          <section className="bg-[#0e162b]/50 backdrop-blur-md border border-blue-500/20 rounded-2xl p-4">
+            <h2 className="text-xl font-semibold text-blue-400 mb-3">
+              Suggestions for you
+            </h2>
+            <FriendSuggestions token={token} currentUser={currentUser} />
+          </section>
+        )}
+
+        {activeTab === "addFriends" && (
+          <section className="bg-[#0e162b]/50 backdrop-blur-md border border-blue-500/20 rounded-2xl p-4">
+            <h2 className="text-xl font-semibold text-blue-400 mb-3">
+              Add Friends
+            </h2>
+            <AddFriends token={token} currentUser={currentUser} />
+          </section>
+        )}
+
+        {activeTab === "requests" && (
+          <section className="bg-[#0e162b]/50 backdrop-blur-md border border-blue-500/20 rounded-2xl p-4">
+            <h2 className="text-xl font-semibold text-blue-400 mb-3">
+              My Requests
+            </h2>
+            <MyRequests token={token} currentUser={currentUser} />
+          </section>
+        )}
+      </div>
     </div>
   );
 };

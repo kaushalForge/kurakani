@@ -6,7 +6,7 @@ import SignUp from "./components/UserUI/SignUp/page";
 import SignIn from "./components/UserUI/SignIn/page";
 import UpdateProfile from "./components/updateProfile/page";
 import Interface from "./components/Interface/page";
-import AddFriends from "./components/AddFriendsUI/page";
+import AddFriends from "./components/ManageFriends/page";
 import { Toaster } from "sonner";
 
 const App = () => {
