@@ -29,9 +29,7 @@ export const manageFriendRequest = async (req, res) => {
 
     // Already friends
     if (senderFriends.includes(requestTo)) {
-      return res
-        .status(200)
-        .json({ message: "Already friends", friendsUpdated: true });
+      return res.status(200).json({ status: 201, message: "Already friends" });
     }
 
     // Check for reverse request
@@ -52,8 +50,8 @@ export const manageFriendRequest = async (req, res) => {
       const updatedReceiver = await User.findById(requestTo);
 
       return res.status(200).json({
+        status: 201,
         message: "Mutual request accepted. You are now friends!",
-        friendsUpdated: true,
       });
     }
 
@@ -75,7 +73,7 @@ export const manageFriendRequest = async (req, res) => {
 
     return res.status(201).json({
       message: "Friend request sent successfully",
-      friendsUpdated: false,
+      status: 201,
     });
   } catch (error) {
     console.error("Error managing friend request:", error);
@@ -150,7 +148,9 @@ export const cancelRequest = async (req, res) => {
       },
     });
 
-    return res.status(200).json({ message: "Friend request canceled" });
+    return res
+      .status(200)
+      .json({ status: 200, message: "Friend request canceled" });
   } catch (error) {
     console.error("Error canceling request:", error);
     return res.status(500).json({ message: "Error canceling request" });

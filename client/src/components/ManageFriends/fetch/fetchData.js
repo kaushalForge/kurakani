@@ -29,13 +29,14 @@ export const fetchAllUsers = async () => {
 export const fetchCurrentUser = async () => {
   const token = getToken();
   const currentUser = getCurrentUser();
-
   if (!currentUser?._id) throw new Error("No current user in localStorage");
 
   const res = await axios.get(`${BASE_URL}/api/user/current-user`, {
     headers: { authorization: token },
     params: { userId: currentUser._id },
   });
+
+  localStorage.setItem("user", JSON.stringify(res.data.currentUser));
   return res.data.currentUser;
 };
 
@@ -103,9 +104,6 @@ export const acceptRequest = async (userId) => {
       headers: { authorization: token },
     }
   );
-  if (res.status === 200) {
-    await refreshAllData();
-  }
   return res.data;
 };
 
@@ -123,7 +121,6 @@ export const cancelRequest = async (userId) => {
       headers: { authorization: token },
     }
   );
-  refreshMyRequests();
   return res.data;
 };
 
@@ -142,12 +139,6 @@ export const unFriend = async (userId) => {
         headers: { authorization: token },
       }
     );
-
-    if (res.data.status === 200) {
-      await fetchAllData();
-    } else {
-      console.error(res.data.message || "Failed to unfriend");
-    }
   } catch (error) {
     console.error("Unfriend error:", error);
   }
@@ -189,8 +180,8 @@ export const fetchAllData = async () => {
 // ============================================
 //
 
-export const refreshAllData = async () => await fetchAllData();
 export const refreshCurrentUser = async () => await fetchCurrentUser();
+export const refreshAllData = async () => await fetchAllData();
 export const refreshFriends = async () => await fetchFriends();
 export const refreshMyRequests = async () => await fetchMyRequests();
 export const refreshFriendSuggestions = async () =>

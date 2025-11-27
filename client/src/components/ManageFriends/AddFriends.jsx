@@ -15,32 +15,28 @@ const AddFriends = ({ token }) => {
   const [search, setSearch] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Load current user and all users
-  const loadUsers = async () => {
+  // Fetch current user and all users
+  const fetchCurrentUserData = async () => {
     try {
-      setLoading(true);
       const user = await fetchCurrentUser();
       setCurrentUser(user);
 
       const users = await fetchAllUsers();
-
-      // Filter out the current user
       const filtered = users.filter((u) => u._id !== user._id);
       setAllUsers(filtered);
       setFilteredUsers(filtered);
     } catch (err) {
-      console.error("Error fetching users:", err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!token) return;
-    loadUsers();
-  }, [token]);
+    fetchCurrentUserData();
+  }, []);
 
-  // Search filter
+  // Filter users based on search
   useEffect(() => {
     setFilteredUsers(
       allUsers.filter((u) =>
@@ -49,26 +45,42 @@ const AddFriends = ({ token }) => {
     );
   }, [search, allUsers]);
 
-  // Send friend request
+  // Send friend request (optimistic update)
   const handleSendRequest = async (userId) => {
     try {
       const res = await sendRequest(userId);
 
-      if (res && (res.status === 200 || res.status === 201)) {
+      if (res && (res.status === 201 || res.status === 200)) {
         toast.success(res.message || "Friend request sent!");
 
-        // Update currentUser's myRequests array live
-        if (currentUser && !(currentUser.myRequests || []).includes(userId)) {
-          const updatedUser = { ...currentUser };
-          updatedUser.myRequests = [...(updatedUser.myRequests || []), userId];
-          setCurrentUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-        }
+        // Update currentUser locally
+        setCurrentUser((prev) => {
+          // If the user is already a friend, no need to add to requests
+          const alreadyFriend = (prev.myFriends || []).includes(userId);
+          if (alreadyFriend) return prev;
+
+          // If the request got accepted instantly (mutual), move userId from myRequests to myFriends
+          const isMutual =
+            res.message?.toLowerCase().includes("mutual") || false;
+          if (isMutual) {
+            return {
+              ...prev,
+              myRequests: (prev.myRequests || []).filter((id) => id !== userId),
+              myFriends: [...(prev.myFriends || []), userId],
+            };
+          }
+
+          // Otherwise, just add to myRequests
+          return {
+            ...prev,
+            myRequests: [...(prev.myRequests || []), userId],
+          };
+        });
       } else {
         toast.error(res.message || "Failed to send request");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error sending request:", err);
       toast.error("Error sending request");
     }
   };
@@ -117,6 +129,7 @@ const AddFriends = ({ token }) => {
               user._id
             );
 
+            // Determine button text and style
             let buttonText = "Add Friend";
             let buttonStyle =
               "flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/20 text-blue-400 transition-all duration-300";
@@ -142,16 +155,15 @@ const AddFriends = ({ token }) => {
                   transition-all duration-300
                 "
               >
-                {/* User Info */}
-                <div className="flex items-center gap-3 text-white overflow-hidden">
+                <div className="flex items-center gap-3 text-white">
                   <img
                     src={user?.profilePicture}
                     alt="profile"
                     className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-500/30"
                   />
-                  <div className="flex flex-col gap-1">
+                  <div>
                     <span className="font-medium text-lg">{user.username}</span>
-                    <span className="text-[#dfdfdf] text-sm">
+                    <span className="text-[#dfdfdf] text-sm block">
                       {user.bio || "No bio"}
                     </span>
                   </div>

@@ -1,53 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import Loader1 from "../UI/Loader/Loader1";
-import { fetchMyRequests, cancelRequest } from "./fetch/fetchData";
+import {
+  fetchMyRequests,
+  cancelRequest,
+  fetchCurrentUser,
+} from "./fetch/fetchData";
 import { toast } from "sonner";
 
 const MyRequests = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const [myRequests, setMyRequests] = useState([]);
-  const [cancelingIds, setCancelingIds] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Function to fetch requests
-  const loadMyRequests = async () => {
+  const fetchCurrentUserData = async () => {
     try {
       setLoading(true);
-      const res = await fetchMyRequests();
-      setMyRequests(res || []);
+
+      const user = await fetchCurrentUser();
+      setCurrentUser(user);
+
+      const users = await fetchMyRequests();
+      setMyRequests(users);
     } catch (err) {
-      console.error("Error fetching requests:", err);
-      toast.error("Failed to fetch requests");
+      console.error("Error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch requests on mount
   useEffect(() => {
-    if (!token) return;
-    loadMyRequests();
-  }, [token]);
+    fetchCurrentUserData();
+  }, []);
 
-  // Cancel a sent request
   const handleCancel = async (userId) => {
+    setMyRequests((prev) => prev.filter((u) => u._id !== userId));
+
     try {
-      setCancelingIds((prev) => [...prev, userId]); // mark as canceling
       const res = await cancelRequest(userId);
-
-      if (res.status === 200 || res.status === 201) {
+      if (res && res.status === 200) {
         toast.success(res.message || "Request cancelled!");
-
-        // ✅ Live update: remove the cancelled request immediately
-        setMyRequests(await fetchMyRequests());
       } else {
         toast.error(res.message || "Failed to cancel request");
+        fetchCurrentUserData();
       }
     } catch (err) {
       console.error(err);
       toast.error("Error cancelling request");
-    } finally {
-      setCancelingIds((prev) => prev.filter((id) => id !== userId));
+
+      // ❗ Also restore if error
+      fetchCurrentUserData();
     }
   };
 
@@ -80,7 +82,6 @@ const MyRequests = ({ token }) => {
             transition-all duration-300
           "
         >
-          {/* User Info */}
           <div className="flex items-center gap-3 text-white overflow-hidden">
             <img
               src={user?.profilePicture}
@@ -95,24 +96,17 @@ const MyRequests = ({ token }) => {
             </div>
           </div>
 
-          {/* Cancel Button */}
+          {/* CANCEL BUTTON — NO DISABLE, NO CANCELLING TEXT */}
           <button
             onClick={() => handleCancel(user._id)}
-            disabled={cancelingIds.includes(user._id)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl
-              ${
-                cancelingIds.includes(user._id)
-                  ? "bg-orange-500/50 cursor-not-allowed"
-                  : "bg-orange-600/20 hover:bg-orange-600/40"
-              }
+            className="flex items-center gap-2 px-3 py-2 rounded-xl
+              bg-orange-600/20 hover:bg-orange-600/40
               border border-orange-500/20 hover:border-orange-500/40
               text-orange-400 transition-all duration-300
-            `}
+            "
           >
             <X size={18} />
-            <span className="text-sm font-medium">
-              {cancelingIds.includes(user._id) ? "Cancelling..." : "Cancel"}
-            </span>
+            <span className="text-sm font-medium">Cancel</span>
           </button>
         </div>
       ))}

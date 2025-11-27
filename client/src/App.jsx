@@ -13,7 +13,7 @@ const App = () => {
   return (
     <Router>
       {/* Global Toaster */}
-      <Toaster position="top-right" />
+      <Toaster richColors={true} position="top-right" />
 
       {/* Route Definitions */}
       <Routes>

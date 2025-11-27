@@ -106,6 +106,7 @@ export const fetchAllRequest = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      status: 201,
       myRequests: requests,
     });
   } catch (err) {
