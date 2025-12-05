@@ -16,7 +16,7 @@ const Page = () => {
       <HeadSection />
 
       {/* SEARCH BAR */}
-      <div className="sticky top-[64px] z-20 bg-[#2C2C2C] py-2 relative">
+      <div className="sticky top-[64px] z-20 bg-[#2C2C2C] py-2 ">
         <input
           type="text"
           placeholder="Search…"
@@ -32,7 +32,7 @@ const Page = () => {
 
       {/* FILTERS */}
       <div className="px-3 py-2 flex items-center gap-3 sticky top-[112px] bg-[#2C2C2C] z-20">
-        {["all", "friends", "groups"].map((filter) => (
+        {["all", "friends"].map((filter) => (
           <button
             key={filter}
             onClick={() => setChatFiltering(filter)}

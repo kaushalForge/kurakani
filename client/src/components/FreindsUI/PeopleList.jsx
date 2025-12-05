@@ -1,66 +1,59 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchAllUsers, fetchCurrentUser } from "../../redux/slices/userSlice";
 
 const PeopleList = ({ searchTerm, chatFiltering }) => {
+  const dispatch = useDispatch();
+  const { allUsers, currentUser, loading } = useSelector((state) => state.user);
+
   const [activeChat, setActiveChat] = useState(null);
 
-  const chats = [
-    {
-      name: "Aayush",
-      msg: "Code push gareko xu bro.",
-      time: "21:18",
-      online: true,
-      type: "friend",
-      img: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    {
-      name: "+977 981-5521034",
-      msg: "📷 Image received",
-      time: "21:05",
-      type: "friend",
-      img: "https://randomuser.me/api/portraits/men/11.jpg",
-    },
-    {
-      name: "Mina",
-      msg: "Thik cha, worry nagarna.",
-      time: "20:51",
-      online: true,
-      type: "friend",
-      img: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    {
-      name: "Study Group",
-      msg: "Kal ko assignment chai send garna.",
-      time: "19:41",
-      type: "group",
-      img: "https://randomuser.me/api/portraits/men/56.jpg",
-    },
-    {
-      name: "Work Group",
-      msg: "Meeting 10am ma cha.",
-      time: "18:30",
-      type: "group",
-      img: "https://randomuser.me/api/portraits/men/45.jpg",
-    },
-    {
-      name: "Rohan",
-      msg: "🎤 Voice message",
-      time: "20:40",
-      type: "friend",
-      img: "https://randomuser.me/api/portraits/men/24.jpg",
-    },
-  ];
+  // Fetch users & current user
+  useEffect(() => {
+    dispatch(fetchAllUsers());
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
 
-  // Filter chats based on search term and chat type
-  const filteredChats = useMemo(() => {
-    return chats.filter((chat) => {
-      const matchesFilter =
-        chatFiltering === "all" ? true : chat.type === chatFiltering;
-      const matchesSearch = chat.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      return matchesFilter && matchesSearch;
-    });
-  }, [searchTerm, chatFiltering]);
+  // Convert users into chat objects
+  const chats = useMemo(() => {
+    if (!allUsers) return [];
+
+    return allUsers
+      .filter((u) => u._id !== currentUser?._id) // don't show yourself
+      .map((user) => ({
+        id: user._id,
+        name: user.username,
+        msg: user.bio || "No bio",
+        time: "Recently",
+        online: true,
+        type: "friend",
+        img: user.profilePicture,
+      }));
+  }, [allUsers, currentUser]);
+
+ 
+const filteredChats = useMemo(() => {
+  return chats.filter((chat) => {
+    // Check if current user is a friend
+    const isFriend = currentUser?.myFriends?.map(id => id.toString()).includes(chat.id);
+
+    // Match filter
+    const matchesFilter =
+      chatFiltering === "all" ? true : (chatFiltering === "friends" ? isFriend : chat.type === chatFiltering);
+
+    // Match search
+    const matchesSearch = chat.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    return matchesFilter && matchesSearch;
+  });
+}, [searchTerm, chatFiltering, chats, currentUser]);
+
+
+  if (loading || !currentUser) {
+    return <div className="text-gray-400 p-4">Loading users...</div>;
+  }
 
   return (
     <div>
@@ -70,7 +63,7 @@ const PeopleList = ({ searchTerm, chatFiltering }) => {
 
       {filteredChats.map((chat, index) => (
         <div
-          key={index}
+          key={chat.id}
           onClick={() => setActiveChat(index)}
           className={`flex items-center justify-between p-3 cursor-pointer transition-all duration-200 ${
             activeChat === index
@@ -85,8 +78,9 @@ const PeopleList = ({ searchTerm, chatFiltering }) => {
                 alt={chat.name}
                 className="w-full h-full object-cover rounded-full"
               />
-              {chat.online && chat.type === "friend" && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0c1418] z-10"></span>
+
+              {chat.online && (
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0c1418]"></span>
               )}
             </div>
 
