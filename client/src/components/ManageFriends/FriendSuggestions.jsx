@@ -1,28 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Loader1 from "../UI/Loader/Loader1";
 import SuggestionCard from "./SuggestionCard";
-import { fetchFriendSuggestions } from "./fetch/fetchData";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchSuggestions,
+  sendRequest,
+  acceptRequest,
+  cancelRequest,
+} from "../../redux/slices/userSlice";
 
-const FriendSuggestions = ({ token }) => {
-  const [loading, setLoading] = useState(true);
-  const [suggestions, setSuggestions] = useState([]);
-
-  // Fetch suggestions
-  const loadSuggestions = async () => {
-    try {
-      const data = await fetchFriendSuggestions();
-      setSuggestions(data || []);
-    } catch (err) {
-      console.error("Error fetching suggestions:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+const FriendSuggestions = () => {
+  const dispatch = useDispatch();
+  const { mySuggestions, loading } = useSelector((state) => state.user);
 
   useEffect(() => {
-    if (!token) return;
-    loadSuggestions();
-  }, [token]);
+    dispatch(fetchSuggestions());
+  }, [dispatch]);
 
   if (loading) {
     return (
@@ -32,7 +25,7 @@ const FriendSuggestions = ({ token }) => {
     );
   }
 
-  if (suggestions.length === 0) {
+  if (!mySuggestions || mySuggestions.length === 0) {
     return (
       <div className="min-h-screen">
         <p className="text-gray-400 text-center mt-10">
@@ -44,12 +37,15 @@ const FriendSuggestions = ({ token }) => {
 
   return (
     <div className="min-h-screen p-4 overflow-y-auto space-y-3">
-      {suggestions.map((friend) => (
+      {mySuggestions.map((friend) => (
         <SuggestionCard
           key={friend._id}
           user={friend}
-          refreshAll={loadSuggestions} // <-- live update after action
-          setMySentRequests={(fn) => {}} // optional, if used in SuggestionCard
+          // Redux-based live updates for actions
+          sendRequest={() => dispatch(sendRequest(friend._id))}
+          acceptRequest={() => dispatch(acceptRequest(friend._id))}
+          cancelRequest={() => dispatch(cancelRequest(friend._id))}
+          refreshAll={() => dispatch(fetchSuggestions())}
         />
       ))}
     </div>

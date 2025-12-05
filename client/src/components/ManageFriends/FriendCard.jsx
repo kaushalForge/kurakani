@@ -1,7 +1,7 @@
 import React from "react";
 import { UserX } from "lucide-react";
 import { toast } from "sonner";
-import { unFriend } from "./fetch/fetchData";
+import { unFriend } from "../../../utils/fetchData";
 
 const FriendCard = ({ user, refreshFriends }) => {
   const handleUnfriend = () => {

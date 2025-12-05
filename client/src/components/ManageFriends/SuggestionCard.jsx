@@ -1,7 +1,7 @@
 import React from "react";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { acceptRequest, cancelRequest } from "./fetch/fetchData";
+import { acceptRequest, cancelRequest } from "../../../utils/fetchData";
 
 const SuggestionCard = ({ user, refreshAll, setSuggestions, suggestions }) => {
   // Accept friend request

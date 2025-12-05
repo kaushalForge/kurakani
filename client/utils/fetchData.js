@@ -1,28 +1,17 @@
 // utils/fetchData.js
 import axios from "axios";
-import { toast } from "sonner";
 
-const BASE_URL = import.meta.env.VITE_API_URL; // keep as-is
+const BASE_URL = import.meta.env.VITE_API_URL;
 
-// --------------------------------------------
-// TOKEN + CURRENT USER
-// --------------------------------------------
 const getToken = () => localStorage.getItem("token");
 const getCurrentUser = () => JSON.parse(localStorage.getItem("user"));
 
-//
-// ============================================
-//              FETCH FUNCTIONS
-// ============================================
-//
-
-// 🔹 Fetch All Users
 export const fetchAllUsers = async () => {
   const token = getToken();
   const res = await axios.get(`${BASE_URL}/api/user`, {
     headers: { authorization: token },
   });
-  return res.data.users;
+  return res.data.allUsers;
 };
 
 // Fetch Current User

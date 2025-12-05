@@ -6,7 +6,7 @@ export const fetchAllUsers = async (req, res) => {
   try {
     await dbConnect();
     const users = await User.find().select("-password");
-    res.status(200).json({ users });
+    res.status(200).json({ allUsers: users });
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ error: "Failed to fetch users" });
